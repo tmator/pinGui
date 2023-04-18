@@ -1,0 +1,1 @@
+- apt-get install libsfml-dev cmake make g++ gcc yasm
