@@ -29,6 +29,8 @@ int fd=-1;
 char buff[1024]={0};
 int buffFull=0;
 
+//user vars
+int score=0;
 
 bool displayTv=false;
 
@@ -89,21 +91,17 @@ void openPort()
 	
 }
 
-
-int main()
+void updateScore(int val)
 {
-	
-	//init serial
-		openPort();
-	std::cout << "Port ok opened" << std::endl;
-	
-    sf::RenderWindow window(sf::VideoMode(1920, 1080), "The Simpsons !", sf::Style::Fullscreen);
-    window.setFramerateLimit(60);
-    window.setVerticalSyncEnabled(true);
-	
-	const char *separators=":";
+	score+=val;
+	char scoreText[1024];
+	sprintf(scoreText, "%d", score);
+	text.setString(scoreText);
+	std::cout << "space" << std::endl;
+}
 
-
+void initFont()
+{
 
 	//load font
 	if (!font.loadFromFile("homer.ttf"))
@@ -115,22 +113,34 @@ int main()
 	text.setFont(font); // font is a sf::Font
 
 	// set the string to display
-	text.setString("Hello world");
+	
 
 	// set the character size
 	text.setCharacterSize(24); // in pixels, not points!
 
 	// set the color
-	text.setFillColor(sf::Color::Red);
+	text.setFillColor(sf::Color::White);
 
 	// set the text style
 	text.setStyle(sf::Text::Bold | sf::Text::Underlined);
 
+}
+
+int main()
+{
+	
+	//init serial
+	openPort();
+	
+    sf::RenderWindow window(sf::VideoMode(1920, 1080), "The Simpsons !", sf::Style::Fullscreen);
+    window.setFramerateLimit(60);
+    window.setVerticalSyncEnabled(true);
+	
+	
+	initFont();	
 
 
-
-
-  if (!movie.openFromFile(mediaFile))
+  	if (!movie.openFromFile(mediaFile))
     {
         //error
 		std::cout << "Error opening file " << mediaFile << std::endl;
@@ -181,47 +191,23 @@ int main()
 				{
 					printf("play video number %s yy\n",ptr);
 					if (movie.getStatus() == sfe::Playing)
-				{
-					movie.pause();
-				}
-                else
-                {
-					displayTv=true;
-					movie.fit(vidx, vidy, vidw, vidh);
-					movie.play();
-				}
+					{
+						movie.pause();
+					}
+                	else
+                	{
+                		//TODO
+						//displayTv=true;
+						//movie.fit(vidx, vidy, vidw, vidh);
+						//movie.play();
+					}
 				}  
         		ptr = strtok (NULL, ":");  
     		}  
 			memcpy(buff, "", sizeof(buff[0])*1024);
 			buffFull=0;
 		}
-		/*
-		
-		char * strToken = strtok ( buff, separators );
-		while ( strToken != NULL ) {
-			//printf ( "token  %s\n", strToken );
-			if (strcmp(strToken,"video")!=0)
-			{
-				printf("play video number %s\n",strtok(strToken, "\n"));
-				if (movie.getStatus() == sfe::Playing)
-				{
-					movie.pause();
-				}
-                else
-                {
-					displayTv=true;
-					movie.fit(vidx, vidy, vidw, vidh);
-					movie.play();
-				}
-			}
-			// On demande le token suivant.
-			strToken = strtok ( NULL, separators );
-			
-		}
-		memcpy(buff, "", sizeof(buff[0])*1024);
 
-		*/
 		
         while (window.pollEvent(event))
         {
@@ -231,29 +217,32 @@ int main()
 			{
 				if (event.key.code == sf::Keyboard::Escape)
 				{
-					std::cout << "the escape key was pressed" << std::endl;
-					std::cout << "control:" << event.key.control << std::endl;
-					std::cout << "alt:" << event.key.alt << std::endl;
-					std::cout << "shift:" << event.key.shift << std::endl;
-					std::cout << "system:" << event.key.system << std::endl;
 					exit(0);
 					break;
 				}
 				
 				if (event.key.code == sf::Keyboard::Space)
 				{
+					std::cout << "space" << std::endl;
 					if (movie.getStatus() == sfe::Playing)
+					{
 						movie.pause();
+					}
                     else
+                    {
 						displayTv=true;
-					
-					        //vid.draw(scrn, ((HALF_WIDTH-(VIDW/2), (HALF_HEIGHT-(VIDH/2))+36)), force_draw=False) 
-							//scrn.blit(im_tv, (HALF_WIDTH-(tv_width/2), HALF_HEIGHT-(tv_height/2))) 
 							//960/720
 						movie.fit(vidx, vidy, vidw, vidh);
                         movie.play();
+                    }
                     break;
 					
+				}
+				if (event.key.code == sf::Keyboard::S)
+				{
+					std::cout << "SSS" << std::endl;
+					updateScore(1000);
+					break;
 				}
 			}
 		}
