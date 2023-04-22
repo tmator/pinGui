@@ -7,9 +7,22 @@
 #include <string.h> /* String function definitions */
 #include <unistd.h> /* UNIX standard function definitions */
 #include <fcntl.h> /* File control definitions */
-
+#include <vector>
 #include <termios.h> /* POSIX terminal control definitions */
+#include "AnimatedGIF.h"
+using namespace std;
 
+typedef struct Data
+{
+	string player;
+	string score;
+	string video;
+	string animation;
+	//text ?
+} Data;
+
+
+Data serialData;
 
 //https://github.com/wjwwood/serial
 //(1080/2)-(805/2))
@@ -53,6 +66,66 @@ void error_display()
 {
 }
 
+const vector<string> explode(const string& s, const char& c)
+{
+	string buff{""};
+	vector<string> v;
+	
+	for(auto n:s)
+	{
+		if(n != c) buff+=n; else
+		if(n == c && buff != "") { v.push_back(buff); buff = ""; }
+	}
+	if(buff != "") v.push_back(buff);
+	
+	return v;
+}
+
+
+void parseSerialData(char *buffData)
+{
+	vector<string> v{explode(buffData, ':')};
+	
+	for (int i=0; i<v.size(); i++)
+	{
+		
+		if (strcmp(v[i].c_str(),"player")==0)
+		{
+			//player
+			i++;
+	
+			serialData.player=v[i];
+			//cout << "Player " << serialData.player << endl;		
+		}
+
+		if (strcmp(v[i].c_str(),"score")==0)
+		{
+			//score
+			i++;
+	
+			serialData.score=v[i];
+			//cout << "Score " << serialData.score << endl;		
+		}
+
+		if (strcmp(v[i].c_str(),"video")==0)
+		{
+			//video
+			i++;
+	
+			serialData.video=v[i];
+			//cout << "Video " << serialData.video << endl;		
+		}
+
+		if (strcmp(v[i].c_str(),"animation")==0)
+		{
+			//animation
+			i++;
+	
+			serialData.animation=v[i];
+			//cout << "Animation " << serialData.animation << endl;		
+		}
+	}
+}
 
 void readData()
 {
@@ -91,14 +164,13 @@ void openPort()
 	
 }
 
-void updateScore(int val)
+void updateScore(string val)
 {
-	score+=val;
-	char scoreText[1024];
-	sprintf(scoreText, "%d", score);
-	text.setString(scoreText);
-	std::cout << "space" << std::endl;
+	text.setString(val);
+	//std::cout << "space" << std::endl;
 }
+
+
 
 void initFont()
 {
@@ -126,6 +198,13 @@ void initFont()
 
 }
 
+void playAnim(string num)
+{
+
+	//play animation num 01 bumpers
+
+}
+
 int main()
 {
 	
@@ -137,6 +216,11 @@ int main()
     window.setVerticalSyncEnabled(true);
 	
 	
+    //open GIT
+    AnimatedGIF gif("pics/pp.gif");
+    sf::Vector2i size = gif.getSize();
+    sf::Sprite spriteGIF;
+
 	initFont();	
 
 
@@ -182,32 +266,35 @@ int main()
 
 		if (buffFull==1)
 		{
-			char *ptr;  
-    		ptr = strtok(buff, ":");  
-    		// use while loop to check ptr is not null  
-    		while (ptr != NULL)  
-    		{  
-        		if (strcmp(ptr,"video")!=0 && strcmp(ptr,"\n")!=0)
-				{
-					printf("play video number %s yy\n",ptr);
-					if (movie.getStatus() == sfe::Playing)
-					{
-						movie.pause();
-					}
-                	else
-                	{
-                		//TODO
-						//displayTv=true;
-						//movie.fit(vidx, vidy, vidw, vidh);
-						//movie.play();
-					}
-				}  
-        		ptr = strtok (NULL, ":");  
-    		}  
+
+			parseSerialData(buff);
 			memcpy(buff, "", sizeof(buff[0])*1024);
 			buffFull=0;
 		}
 
+		//on traite les info
+		//update player
+		//updatePlayer(serialData.player);
+
+		//update ball
+		//updateBall(serial.Databall);
+
+		//update score
+		updateScore(serialData.score);
+
+		//anim ?
+		if (strcmp(serialData.animation.c_str(),"00")!=0)
+		{
+			//on joue l'annimation
+		}
+
+		//video ?
+		if (strcmp(serialData.video.c_str(),"00")!=0)
+		{
+			//on joue la video
+		}
+
+		//ajout texte ? minuterie ? lock ? video mode ? autre info ?
 		
         while (window.pollEvent(event))
         {
@@ -241,7 +328,14 @@ int main()
 				if (event.key.code == sf::Keyboard::S)
 				{
 					std::cout << "SSS" << std::endl;
-					updateScore(1000);
+					updateScore("1000");
+					break;
+				}
+				if (event.key.code == sf::Keyboard::B)
+				{
+					//play anim=true
+					playAnim("01");
+					
 					break;
 				}
 			}
@@ -249,7 +343,10 @@ int main()
 
 
 		movie.update();
-
+		
+		gif.update(spriteGIF);
+		window.draw(spriteGIF);
+		
 		window.draw(movie);
 		
 		if (displayTv==true)
